@@ -1,0 +1,14 @@
+# Fichiers sensibles
+.env
+
+# Node.js
+node_modules/
+*.log
+
+# Python / Django
+__pycache__/
+*.pyc
+db.sqlite3
+
+# macOS
+.DS_Store

@@ -1,0 +1,214 @@
+ <!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Fiche cliente – Salon Mireille Beauté</title>
+  <link rel="stylesheet" href="admin.css" />
+  <style>
+    body {
+      font-family: sans-serif;
+      max-width: 700px;
+      margin: auto;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+    }
+    .photo {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin: 10px auto;
+      display: block;
+    }
+    form {
+      background: #f9f9f9;
+      padding: 20px;
+      border: 1px solid #ccc;
+      margin-bottom: 30px;
+    }
+    input, select, button {
+      width: 100%;
+      margin-bottom: 15px;
+      padding: 8px;
+      font-size: 16px;
+    }
+    #message {
+      text-align: center;
+      font-weight: bold;
+      margin-top: 10px;
+    }
+    #historique {
+      margin-top: 30px;
+    }
+    .rendezvous {
+      background: #eef;
+      padding: 10px;
+      margin-bottom: 10px;
+      border-left: 4px solid #88f;
+    }
+  </style>
+</head>
+<body>
+  <h1>👩 Fiche cliente</h1>
+  <img src="https://placehold.co/120x120?text=Photo" alt="Photo cliente" class="photo" />
+
+  <label for="adminPassword">Mot de passe admin :</label>
+  <input type="password" id="adminPassword" />
+  <button onclick="chargerFicheClient()">🔍 Charger la fiche cliente</button>
+
+  <form id="formModification" style="display:none;">
+    <input name="nom" placeholder="Nom" required />
+    <input name="date" type="date" required />
+    <input name="heure" type="time" required />
+    <input name="coiffure" placeholder="Coiffure" required />
+    <input name="telephone" placeholder="Téléphone" required />
+    <button type="submit">💾 Enregistrer les modifications</button>
+    <button type="button" onclick="supprimerFiche()">🗑 Supprimer la fiche</button>
+    <button type="button" onclick="window.print()">🖨 Imprimer cette fiche</button>
+  </form>
+
+  <div id="message"></div>
+
+  <div id="historique">
+    <h2>📅 Historique des rendez-vous</h2>
+    <div id="listeHistorique"></div>
+  </div>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const id = params.get("id");
+
+    async function chargerFicheClient() {
+      const motDePasse = document.getElementById("adminPassword").value.trim();
+      if (!id || !motDePasse) {
+        document.getElementById("message").innerText = "⛔ ID ou mot de passe manquant.";
+        return;
+      }
+
+      try {
+        const res = await fetch(`http://localhost:3000/admin/reservations/${id}`, {
+          headers: { "x-admin-password": motDePasse }
+        });
+
+        if (!res.ok) {
+          document.getElementById("message").innerText = "⛔ Accès refusé ou cliente introuvable.";
+          return;
+        }
+
+        const data = await res.json();
+        const form = document.getElementById("formModification");
+        form.style.display = "block";
+        form.nom.value = data.nom;
+        form.date.value = data.date;
+        form.heure.value = data.heure;
+        form.coiffure.value = data.coiffure;
+        form.telephone.value = data.telephone;
+
+        chargerHistorique(data.telephone, motDePasse);
+
+        form.onsubmit = async (e) => {
+          e.preventDefault();
+          const miseAJour = {
+            nom: form.nom.value,
+            date: form.date.value,
+            heure: form.heure.value,
+            coiffure: form.coiffure.value,
+            telephone: form.telephone.value
+          };
+
+          try {
+            const res = await fetch(`http://localhost:3000/admin/reservations/${id}`, {
+              method: "PUT",
+              headers: {
+                "Content-Type": "application/json",
+                "x-admin-password": motDePasse
+              },
+              body: JSON.stringify(miseAJour)
+            });
+
+            if (res.ok) {
+              document.getElementById("message").innerText = "✅ Modification enregistrée avec succès.";
+              document.getElementById("message").style.color = "green";
+            } else {
+              document.getElementById("message").innerText = "⛔ Échec de la modification.";
+              document.getElementById("message").style.color = "red";
+            }
+          } catch (err) {
+            console.error("❌ Erreur réseau :", err);
+            document.getElementById("message").innerText = "⛔ Erreur de connexion au serveur.";
+            document.getElementById("message").style.color = "red";
+          }
+        };
+      } catch (err) {
+        console.error("❌ Erreur chargement fiche :", err);
+        document.getElementById("message").innerText = "⛔ Erreur de chargement.";
+      }
+    }
+
+    async function supprimerFiche() {
+      const motDePasse = document.getElementById("adminPassword").value.trim();
+      if (!confirm("🗑 Supprimer cette fiche cliente ?")) return;
+
+      try {
+        const res = await fetch(`http://localhost:3000/admin/reservations/${id}`, {
+          method: "DELETE",
+          headers: { "x-admin-password": motDePasse }
+        });
+
+        if (res.ok) {
+          document.getElementById("message").innerText = "✅ Fiche supprimée.";
+          document.getElementById("message").style.color = "green";
+          document.getElementById("formModification").remove();
+        } else {
+          document.getElementById("message").innerText = "⛔ Échec de la suppression.";
+          document.getElementById("message").style.color = "red";
+        }
+      } catch (err) {
+        console.error("❌ Erreur suppression :", err);
+        document.getElementById("message").innerText = "⛔ Erreur serveur.";
+        document.getElementById("message").style.color = "red";
+      }
+    }
+
+    function getCouleurCoiffure(type) {
+      switch (type) {
+        case "Rasta": return "#d35400";
+        case "Coloration": return "#8e44ad";
+        case "Tresses": return "#27ae60";
+        case "Extensions": return "#2980b9";
+        case "Soins capillaires": return "#2c3e50";
+        case "Coiffure événementielle": return "#c0392b";
+        default: return "#7f8c8d";
+      }
+    }
+
+    async function chargerHistorique(telephone, motDePasse) {
+      try {
+        const res = await fetch(`http://localhost:3000/admin/reservations?telephone=${encodeURIComponent(telephone)}`, {
+          headers: { "x-admin-password": motDePasse }
+        });
+
+        const data = await res.json();
+        const liste = document.getElementById("listeHistorique");
+        liste.innerHTML = "";
+
+        data.forEach(r => {
+          const bloc = document.createElement("div");
+          bloc.className = "rendezvous";
+          bloc.style.borderLeft = `4px solid ${getCouleurCoiffure(r.coiffure)}`;
+          bloc.innerHTML = `
+            <strong>${r.date} à ${r.heure}</strong><br>
+            Coiffure : ${r.coiffure}
+          `;
+          liste.appendChild(bloc);
+        });
+      } catch (err) {
+        console.error("❌ Erreur historique :", err);
+        document.getElementById("listeHistorique").innerText = "⛔ Historique indisponible.";
+      }
+    }
+  </script>
+</body>
+</html>

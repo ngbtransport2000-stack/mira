@@ -1,0 +1,274 @@
+  <!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Tableau de bord – Salon Mireille Beauté</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 20px;
+      max-width: 800px;
+      margin: auto;
+      background-color: #fdfdfd;
+    }
+
+    h1, h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    input, select, button {
+      margin: 10px 0;
+      padding: 8px;
+      width: 100%;
+      font-size: 16px;
+    }
+
+    .client {
+      border: 1px solid #ccc;
+      padding: 10px;
+      margin-bottom: 10px;
+      background: #f9f9f9;
+    }
+
+    .client a {
+      text-decoration: none;
+      color: #2980b9;
+      font-weight: bold;
+    }
+
+    .actions button {
+      margin-right: 10px;
+    }
+
+    #creneauxLibres {
+      margin-top: 20px;
+      background: #eef;
+      padding: 10px;
+      border-left: 4px solid #88f;
+    }
+
+    .nav-top {
+      text-align: right;
+      margin-bottom: 20px;
+    }
+
+    .nav-top button {
+      padding: 10px 20px;
+      font-size: 16px;
+      font-weight: bold;
+      background-color: #2196f3;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      transition: background-color 0.3s ease;
+    }
+
+    .nav-top button:hover {
+      background-color: #1976d2;
+    }
+
+    .password-section {
+      margin-bottom: 20px;
+    }
+
+    .password-section input {
+      padding: 10px;
+      font-size: 16px;
+      width: 70%;
+      margin-top: 5px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+
+    .password-section button {
+      padding: 10px 20px;
+      margin-left: 10px;
+      font-weight: bold;
+      background-color: #4caf50;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    .password-section button:hover {
+      background-color: #388e3c;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="nav-top">
+    <a href="admin.html">
+      <button>🔙 Retour à l’administration</button>
+    </a>
+  </div>
+
+  <h1>📋 Tableau de bord admin</h1>
+
+  <div class="password-section">
+    <label for="adminPassword">🔐 Mot de passe :</label><br>
+    <input type="password" id="adminPassword" placeholder="Entrez votre mot de passe" />
+    <button onclick="validerMotDePasse()">OK</button>
+  </div>
+
+  <input type="date" id="filtreDate" />
+  <input type="text" id="filtreCoiffure" placeholder="Type de coiffure" />
+  <button onclick="chargerListe()">🔍 Rechercher</button>
+
+  <div id="creneauxLibres"></div>
+
+  <h2>➕ Nouvelle réservation</h2>
+  <form id="formReservation">
+    <input name="nom" placeholder="Nom" required />
+    <input name="telephone" placeholder="Téléphone" required />
+    <input name="date" type="date" required />
+    <input name="heure" placeholder="Heure (ex: 10:30)" required />
+    <input name="coiffure" placeholder="Type de coiffure" required />
+    <button type="submit">💾 Enregistrer</button>
+  </form>
+
+  <div style="margin-top: 20px;">
+    <button onclick="simulerExport('pdf')">📤 Exporter en PDF</button>
+    <button onclick="simulerExport('excel')">📊 Exporter en Excel</button>
+  </div>
+
+  <div id="listeClients"></div>
+
+  <script>
+    let motDePasseAdmin = "";
+     function validerMotDePasse() {
+  const champ = document.getElementById("adminPassword");
+  const motDePasse = champ.value.trim();
+
+  if (!motDePasse) {
+    alert("⛔ Veuillez entrer un mot de passe.");
+    return;
+  }
+
+  motDePasseAdmin = motDePasse; // stocké pour les autres fonctions
+  champ.value = ""; // efface le champ
+  alert("✅ Mot de passe validé !");
+}
+
+    async function chargerListe() {
+      const motDePasse = motDePasseAdmin; 
+      const date = document.getElementById("filtreDate").value;
+      const coiffure = document.getElementById("filtreCoiffure").value.trim();
+
+      let url = "http://localhost:3000/admin/reservations?";
+      if (date) url += `date=${date}&`;
+      if (coiffure) url += `coiffure=${encodeURIComponent(coiffure)}&`;
+
+      try {
+        const res = await fetch(url, {
+          headers: { "x-admin-password": motDePasse }
+        });
+
+        const data = await res.json();
+        const container = document.getElementById("listeClients");
+        container.innerHTML = "";
+
+        data.forEach(r => {
+          const bloc = document.createElement("div");
+          bloc.className = "client";
+          bloc.innerHTML = `
+            <a href="client.html?id=${r._id}" target="_blank">${r.nom}</a><br>
+            📅 ${r.date} à ${r.heure} – 💇 ${r.coiffure}<br>
+            📞 ${r.telephone}
+            <div class="actions">
+              <button onclick="envoyerRappel('${r._id}', '${motDePasse}')">📲 Rappel</button>
+              <button onclick="imprimerFiche('${r._id}')">🖨 Imprimer</button>
+            </div>
+          `;
+          container.appendChild(bloc);
+        });
+
+        if (date) chargerCreneauxLibres(date);
+      } catch (err) {
+        console.error("❌ Erreur chargement liste :", err);
+        document.getElementById("listeClients").innerText = "⛔ Impossible de charger les données.";
+      }
+    }
+
+    async function envoyerRappel(id, motDePasse) {
+      try {
+        const res = await fetch(`http://localhost:3000/admin/rappel/${id}`, {
+          method: "POST",
+          headers: { "x-admin-password": motDePasse }
+        });
+
+        if (res.ok) {
+          alert("✅ Rappel envoyé !");
+        } else {
+          alert("⛔ Échec du rappel.");
+        }
+      } catch (err) {
+        console.error("❌ Erreur rappel :", err);
+        alert("⛔ Erreur serveur.");
+      }
+    }
+
+    function imprimerFiche(id) {
+      const win = window.open(`client.html?id=${id}`, "_blank");
+      win.onload = () => win.print();
+    }
+
+    async function chargerCreneauxLibres(date) {
+      try {
+        const res = await fetch(`http://localhost:3000/disponibilites?date=${date}`);
+        const heuresPrises = await res.json();
+
+        const resCreneaux = await fetch("http://localhost:3000/creneaux");
+        const tousLesCreneaux = await resCreneaux.json();
+
+        const libres = tousLesCreneaux.filter(h => !heuresPrises.includes(h));
+        const bloc = document.getElementById("creneauxLibres");
+        bloc.innerHTML = `<strong>🕒 Créneaux libres pour ${date} :</strong><br>${libres.join(", ")}`;
+      } catch (err) {
+        console.error("❌ Erreur créneaux :", err);
+        document.getElementById("creneauxLibres").innerText = "⛔ Impossible de charger les créneaux.";
+      }
+    }
+
+    document.getElementById("formReservation").onsubmit = async (e) => {
+      e.preventDefault();
+      const form = e.target;
+      const reservation = {
+        nom: form.nom.value,
+        telephone: form.telephone.value,
+        date: form.date.value,
+        heure: form.heure.value,
+        coiffure: form.coiffure.value
+      };
+
+      try {
+        const res = await fetch("http://localhost:3000/notifier-mireille", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(reservation)
+        });
+
+        if (res.ok){
+                  alert("✅ Réservation enregistrée !");
+          form.reset();
+          chargerListe();
+        } else {
+          alert("⛔ Échec de l'enregistrement.");
+        }
+      } catch (err) {
+        console.error("❌ Erreur création :", err);
+        alert("⛔ Erreur serveur.");
+      }
+    };
+
+    function simulerExport(type) {
+      alert(`📤 Export ${type.toUpperCase()} simulé ! (fonction à activer côté serveur)`);
+    }
+  </script>
+</body>
+</html>
