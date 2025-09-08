@@ -1,288 +1,505 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="fr">
-<head>
-  <meta charset="UTF-8" />
-  <title>Admin – Salon Mireille Beauté</title>
-  <link rel="stylesheet" href="admin.css" />
-  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet" />
-  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <style>
-    body { font-family: sans-serif; max-width: 900px; margin: auto; padding: 20px; }
-    .reservation { border: 1px solid #ccc; padding: 10px; margin: 10px 0; background: #f9f9f9; }
-    #calendrier { margin-top: 40px; }
-  </style>
-</head>
-<body>
-  <a href="admin-dashboard.html">
-    <button style="padding: 10px 20px; font-size: 16px; font-weight: bold; background-color: #4caf50; color: white; border: none; border-radius: 6px; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.2); transition: background-color 0.3s ease;">
-      📊 Accéder au tableau de bord
+  <head>
+    <meta charset="UTF-8" />
+    <title>Admin – Salon Mireille Beauté</title>
+    <link rel="stylesheet" href="admin.css" />
+    <!-- CSS de FullCalendar -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css"
+      rel="stylesheet"
+    />
+
+    <!-- JS de FullCalendar -->
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+      body {
+        font-family: sans-serif;
+        max-width: 900px;
+        margin: auto;
+        padding: 20px;
+      }
+      .reservation {
+        border: 1px solid #ccc;
+        padding: 10px;
+        margin: 10px 0;
+        background: #f9f9f9;
+      }
+      #calendrier {
+        margin-top: 40px;
+      }
+    </style>
+  </head>
+  <body>
+    <a href="admin-dashboard.html">
+      <button
+        style="
+          padding: 10px 20px;
+          font-size: 16px;
+          font-weight: bold;
+          background-color: #4caf50;
+          color: white;
+          border: none;
+          border-radius: 6px;
+          cursor: pointer;
+          box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+          transition: background-color 0.3s ease;
+        "
+      >
+        📊 Accéder au tableau de bord
+      </button>
+    </a>
+    <h1>📋 Réservations du salon Mireille Beauté</h1>
+
+    <div id="zoneConnexion" style="margin-bottom: 20px">
+      <label for="adminPassword">Mot de passe admin :</label>
+      <input type="password" id="adminPassword" />
+      <button onclick="validerMotDePasse()">✅ Valider</button>
+    </div>
+
+    <button onclick="toggleCreneaux()" style="margin-top: 20px">
+      ⚙️ Gérer les créneaux
     </button>
-  </a>
-  <h1>📋 Réservations du salon Mireille Beauté</h1>
 
-  <div id="zoneConnexion" style="margin-bottom: 20px;">
-    <label for="adminPassword">Mot de passe admin :</label>
-    <input type="password" id="adminPassword" />
-    <button onclick="validerMotDePasse()">✅ Valider</button>
-  </div>
+    <div id="gestionCreneaux" style="display: none; margin-top: 10px">
+      <h2></h2>
+      <input type="text" id="nouveauCreneau" placeholder="Ex: 17:00" />
+      <button onclick="ajouterCreneau()">➕ Ajouter</button>
 
-  <button onclick="toggleCreneaux()" style="margin-top: 20px;">⚙️ Gérer les créneaux</button>
-  <div id="gestionCreneaux" style="display: none; margin-top: 10px;">
-    <input type="text" id="nouveauCreneau" placeholder="Ex: 17:00" />
-    <button onclick="ajouterCreneau()">➕ Ajouter</button>
-    <select id="creneauASupprimer"></select>
-    <button onclick="retirerCreneau()">➖ Retirer</button>
-  </div>
+      <select id="creneauASupprimer"></select>
+      <button onclick="retirerCreneau()">➖ Retirer</button>
+    </div>
 
-  <button onclick="toggleFiltres()" style="margin-top: 20px;">🔍 Afficher les filtres</button>
-  <div id="blocFiltres" style="display: none; margin-top: 10px;">
-    <label for="rechercheNom">Nom :</label>
-    <input type="text" id="rechercheNom" oninput="chargerReservations()" placeholder="Ex: Mireille" />
-    <label for="filtreDate">Date :</label>
-    <select id="filtreDate" onchange="chargerReservations()">
-      <option value="">-- Toutes les dates --</option>
-      <option value="2025-09-01">1 septembre 2025</option>
-      <option value="2025-09-02">2 septembre 2025</option>
-    </select>
-    <label for="filtreCoiffure">Coiffure :</label>
-    <select id="filtreCoiffure" onchange="chargerReservations()">
-      <option value="">-- Toutes --</option>
-      <option value="Brushing">Brushing</option>
-      <option value="Coloration">Coloration</option>
-      <option value="Tresses">Tresses</option>
-      <option value="Extensions">Extensions</option>
-      <option value="Soins capillaires">Soins capillaires</option>
-      <option value="Coiffure événementielle">Coiffure événementielle</option>
-      <option value="Perruques">Perruques</option>
-    </select>
-    <label for="tri">Trier par :</label>
-    <select id="tri" onchange="chargerReservations()">
-      <option value="recent">Récent en premier</option>
-      <option value="date">Date croissante</option>
-      <option value="coiffure">Coiffure A-Z</option>
-    </select>
-  </div>
+    <button onclick="toggleFiltres()" style="margin-top: 20px">
+      🔍 Afficher les filtres
+    </button>
 
-  <button onclick="toggleReservations()" id="btnReservations">📋 Afficher les réservations</button>
-  <button onclick="exporterPDF()">📄 Exporter en PDF</button>
-  <button onclick="toggleCalendrier()" id="btnCalendrier">📅 Voir le calendrier</button>
+    <div id="blocFiltres" style="display: none; margin-top: 10px">
+      <h2>🔍 Filtres</h2>
 
-  <div id="reservations" style="display: none;"></div>
-  <div id="calendrier" style="display: none;"></div>
+      <label for="rechercheNom">Nom :</label>
+      <input
+        type="text"
+        id="rechercheNom"
+        oninput="chargerReservations()"
+        placeholder="Ex: Mireille"
+      />
 
-  <script>
-    const BASE_URL = "https://mkbeauty-backend.onrender.com";
-    let motDePasseAdmin = "";
-    let sessionActive = false;
+      <label for="filtreDate">Date :</label>
+      <select id="filtreDate" onchange="chargerReservations()">
+        <option value="">-- Toutes les dates --</option>
+        <option value="2025-09-01">1 septembre 2025</option>
+        <option value="2025-09-02">2 septembre 2025</option>
+      </select>
 
-    function validerMotDePasse() {
-      const champ = document.getElementById("adminPassword");
-      const motDePasse = champ.value.trim();
-      if (!motDePasse) return alert("⛔ Veuillez entrer le mot de passe.");
-      motDePasseAdmin = motDePasse;
-      sessionActive = true;
-      document.getElementById("zoneConnexion").style.display = "none";
-      alert("✅ Mot de passe validé !");
-    }
+      <label for="filtreCoiffure">Coiffure :</label>
+      <select id="filtreCoiffure" onchange="chargerReservations()">
+        <option value="">-- Toutes --</option>
+        <option value="Brushing">Brushing</option>
+        <option value="Coloration">Coloration</option>
+        <option value="Tresses">Tresses</option>
+        <option value="Extensions">Extensions</option>
+        <option value="Soins capillaires">Soins capillaires</option>
+        <option value="Coiffure événementielle">Coiffure événementielle</option>
+        <option value="Perruques">Perruques</option>
+      </select>
 
-    function toggleCreneaux() {
-      const bloc = document.getElementById("gestionCreneaux");
-      bloc.style.display = bloc.style.display === "none" ? "block" : "none";
-    }
+      <label for="tri">Trier par :</label>
+      <select id="tri" onchange="chargerReservations()">
+        <option value="recent">Récent en premier</option>
+        <option value="date">Date croissante</option>
+        <option value="coiffure">Coiffure A-Z</option>
+      </select>
+    </div>
 
-    function toggleFiltres() {
-      const bloc = document.getElementById("blocFiltres");
-      bloc.style.display = bloc.style.display === "none" ? "block" : "none";
-    }
+    <button onclick="toggleReservations()" id="btnReservations">
+      📋 Afficher les réservations
+    </button>
+    <button onclick="exporterPDF()">📄 Exporter en PDF</button>
+    <button onclick="toggleCalendrier()" id="btnCalendrier">
+      📅 Voir le calendrier
+    </button>
 
-    async function ajouterCreneau() {
-      if (!sessionActive || !motDePasseAdmin) return alert("⛔ Mot de passe requis.");
-      const heure = document.getElementById("nouveauCreneau").value.trim();
-      if (!heure) return alert("⛔ Heure requise.");
-      await fetch(`${BASE_URL}/admin/creneaux`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-admin-password": motDePasseAdmin
-        },
-        body: JSON.stringify({ heure })
-      });
-      chargerListeCreneaux();
-    }
+    <div id="reservations" style="display: none"></div>
+    <div id="calendrier" style="display: none"></div>
 
-    async function retirerCreneau() {
-      if (!sessionActive || !motDePasseAdmin) return alert("⛔ Mot de passe requis.");
-      const heure = document.getElementById("creneauASupprimer").value;
-      await fetch(`${BASE_URL}/admin/creneaux/${heure}`, {
-        method: "DELETE",
-        headers: { "x-admin-password": motDePasseAdmin }
-      });
-      chargerListeCreneaux();
-    }
+    <script>
+      let motDePasseAdmin = "";
+      let sessionActive = false;
 
-    async function chargerListeCreneaux() {
-      const res = await fetch(`${BASE_URL}/creneaux`);
-      const data = await res.json();
-      const select = document.getElementById("creneauASupprimer");
-      select.innerHTML = "";
-      data.forEach(h => {
-        const opt = document.createElement("option");
-        opt.value = h;
-        opt.textContent = h;
-        select.appendChild(opt);
-      });
-    }
+      function validerMotDePasse() {
+        const champ = document.getElementById("adminPassword");
+        const motDePasse = champ.value.trim();
 
-    async function chargerReservations() {
-      if (!sessionActive || !motDePasseAdmin) return alert("⛔ Mot de passe requis.");
-      const date = document.getElementById("filtreDate").value;
-      const coiffure = document.getElementById("filtreCoiffure").value;
-      const tri = document.getElementById("tri").value;
-      const rechercheNom = document.getElementById("rechercheNom").value.trim().toLowerCase();
+        if (!motDePasse) {
+          alert("⛔ Veuillez entrer le mot de passe.");
+          return;
+        }
 
-      let url = `${BASE_URL}/admin/reservations?`;
-      if (date) url += `date=${date}&`;
-      if (coiffure) url += `coiffure=${encodeURIComponent(coiffure)}&`;
+        motDePasseAdmin = motDePasse;
+        sessionActive = true;
 
-      const res = await fetch(url, { headers: { "x-admin-password": motDePasseAdmin } });
-      const container = document.getElementById("reservations");
-      container.innerHTML = "";
+        // Masquer le champ et le bouton après validation
+        document.getElementById("zoneConnexion").style.display = "none";
 
-      if (!res.ok) return container.innerHTML = "<p>⛔ Accès refusé ou erreur serveur.</p>";
-
-      let data = await res.json();
-      if (rechercheNom) data = data.filter(r => r.nom.toLowerCase().includes(rechercheNom));
-
-      if (tri === "date") {
-        data.sort((a, b) => a.date.localeCompare(b.date) || a.heure.localeCompare(b.heure));
-      } else if (tri === "coiffure") {
-        data.sort((a, b) => a.coiffure.localeCompare(b.coiffure));
-      } else {
-        data.sort((a, b) => b._id.localeCompare(a._id));
+        alert("✅ Mot de passe validé !");
       }
-
-            if (data.length === 0) return container.innerHTML = "<p>Aucune réservation trouvée.</p>";
-
-      data.forEach(r => {
-        const bloc = document.createElement("div");
-        bloc.className = "reservation";
-        bloc.innerHTML = `
-          <p><strong>Nom :</strong> <a href="client.html?id=${r._id}" target="_blank">${r.nom}</a></p>
-          <p><strong>Date :</strong> ${r.date}</p>
-          <p><strong>Heure :</strong> ${r.heure}</p>
-          <p><strong>Coiffure :</strong> ${r.coiffure}</p>
-          <button onclick="envoyerRappel('${r._id}')">📲 Rappel</button>
-          <button onclick="supprimerReservation('${r._id}')">🗑 Supprimer</button>
-        `;
-        container.appendChild(bloc);
-      });
-    }
-
-    async function envoyerRappel(id) {
-      if (!sessionActive || !motDePasseAdmin) return alert("⛔ Mot de passe requis.");
-      try {
-        const res = await fetch(`${BASE_URL}/admin/rappel/${id}`, {
-          method: "POST",
-          headers: { "x-admin-password": motDePasseAdmin }
-        });
-        alert(res.ok ? "✅ Rappel envoyé !" : "⛔ Échec de l'envoi du rappel.");
-      } catch (err) {
-        console.error("❌ Erreur réseau :", err);
-        alert("⛔ Impossible de contacter le serveur.");
+      function toggleCreneaux() {
+        const bloc = document.getElementById("gestionCreneaux");
+        bloc.style.display = bloc.style.display === "none" ? "block" : "none";
       }
-    }
+      function toggleFiltres() {
+        const bloc = document.getElementById("blocFiltres");
+        bloc.style.display = bloc.style.display === "none" ? "block" : "none";
+      }
+      let reservationsVisibles = false;
 
-    async function supprimerReservation(id) {
-      if (!id || !motDePasseAdmin) return alert("⛔ ID ou mot de passe manquant.");
-      if (!confirm("🗑 Supprimer cette réservation ?")) return;
-      try {
-        const res = await fetch(`${BASE_URL}/admin/reservations/${id}`, {
-          method: "DELETE",
-          headers: { "x-admin-password": motDePasseAdmin }
-        });
-        if (res.ok) {
-          alert("✅ Réservation supprimée !");
+      function toggleReservations() {
+        if (!sessionActive || !motDePasseAdmin) {
+          alert("⛔ Vous devez d'abord valider le mot de passe.");
+          return;
+        }
+        const container = document.getElementById("reservations");
+        const bouton = document.getElementById("btnReservations");
+        const motDePasse = document
+          .getElementById("adminPassword")
+          .value.trim();
+
+        if (!motDePasse) {
+          alert("⛔ Veuillez entrer le mot de passe.");
+          return;
+        }
+
+        if (!reservationsVisibles) {
           chargerReservations();
+          container.style.display = "block";
+          bouton.textContent = "📋 Masquer les réservations";
+          reservationsVisibles = true;
         } else {
-          alert("⛔ Échec de la suppression.");
+          container.style.display = "none";
+          bouton.textContent = "📋 Afficher les réservations";
+          reservationsVisibles = false;
         }
-      } catch (err) {
-        console.error("❌ Erreur réseau :", err);
-        alert("⛔ Impossible de contacter le serveur.");
       }
-    }
+      let calendrierVisible = false;
+      let calendarInstance = null;
 
-    async function exporterPDF() {
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF();
-      let y = 20;
-
-      doc.setFontSize(16);
-      doc.text("Salon Mireille Beauté – Réservations", 10, 10);
-
-      const blocs = document.querySelectorAll(".reservation");
-      if (blocs.length === 0) {
-        alert("⛔ Aucune réservation à exporter.");
-        return;
-      }
-
-      blocs.forEach((bloc) => {
-        const lignes = bloc.innerText.split("\n");
-        lignes.forEach((ligne) => {
-          doc.setFontSize(12);
-          doc.text(ligne, 10, y);
-          y += 7;
-        });
-        y += 5;
-        if (y > 250) {
-          doc.addPage();
-          y = 20;
+      async function toggleCalendrier() {
+        if (!sessionActive || !motDePasseAdmin) {
+          alert("⛔ Vous devez d'abord valider le mot de passe.");
+          return;
         }
-      });
+        const bloc = document.getElementById("calendrier");
+        const bouton = document.getElementById("btnCalendrier");
+        const motDePasse = document
+          .getElementById("adminPassword")
+          .value.trim();
 
-      doc.text("Signature : Mireille, propriétaire du Salon Mireille Beauté", 10, y + 10);
-      doc.save("reservations_mireille.pdf");
-    }
+        if (!motDePasse) {
+          alert("⛔ Veuillez entrer le mot de passe.");
+          return;
+        }
 
-    async function toggleCalendrier() {
-      if (!sessionActive || !motDePasseAdmin) return alert("⛔ Mot de passe requis.");
-      const bloc = document.getElementById("calendrier");
-      const bouton = document.getElementById("btnCalendrier");
+        if (!calendrierVisible) {
+          bloc.style.display = "block";
 
-      if (!bloc.hasChildNodes()) {
-        const res = await fetch(`${BASE_URL}/admin/reservations`, {
-          headers: { "x-admin-password": motDePasseAdmin }
+          if (!calendarInstance) {
+            const res = await fetch(
+              "http://localhost:3000/admin/reservations",
+              {
+                headers: { "x-admin-password": motDePasse },
+              }
+            );
+
+            const data = await res.json();
+
+            const events = data.map((r) => ({
+              title: r.nom,
+              start: `${r.date}T${r.heure}`,
+              url: `client.html?id=${r._id}`,
+            }));
+
+            calendarInstance = new FullCalendar.Calendar(bloc, {
+              initialView: "dayGridMonth",
+              locale: "fr",
+              events: events,
+              eventClick: function (info) {
+                info.jsEvent.preventDefault();
+                if (info.event.url) window.open(info.event.url, "_blank");
+              },
+            });
+
+            calendarInstance.render();
+          } else {
+            setTimeout(() => {
+              calendarInstance.updateSize();
+            }, 100);
+          }
+
+          bouton.textContent = "📅 Masquer le calendrier";
+          calendrierVisible = true;
+        } else {
+          bloc.style.display = "none";
+          bouton.textContent = "📅 Voir le calendrier";
+          calendrierVisible = false;
+        }
+      }
+      async function ajouterCreneau() {
+        if (!sessionActive || !motDePasseAdmin) {
+          alert("⛔ Vous devez d'abord valider le mot de passe.");
+          return;
+        }
+        const heure = document.getElementById("nouveauCreneau").value.trim();
+        const motDePasse = document
+          .getElementById("adminPassword")
+          .value.trim();
+        if (!heure || !motDePasse)
+          return alert("⛔ Heure et mot de passe requis.");
+        await fetch("http://localhost:3000/admin/creneaux", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-admin-password": motDePasse,
+          },
+          body: JSON.stringify({ heure }),
         });
+        chargerListeCreneaux();
+      }
+
+      async function retirerCreneau() {
+        if (!sessionActive || !motDePasseAdmin) {
+          alert("⛔ Vous devez d'abord valider le mot de passe.");
+          return;
+        }
+        const heure = document.getElementById("creneauASupprimer").value;
+        const motDePasse = document
+          .getElementById("adminPassword")
+          .value.trim();
+        if (!heure || !motDePasse)
+          return alert("⛔ Sélectionnez un créneau et entrez le mot de passe.");
+        await fetch(`http://localhost:3000/admin/creneaux/${heure}`, {
+          method: "DELETE",
+          headers: { "x-admin-password": motDePasse },
+        });
+        chargerListeCreneaux();
+      }
+
+      async function chargerListeCreneaux() {
+        const res = await fetch("http://localhost:3000/creneaux");
         const data = await res.json();
-        const events = data.map(r => ({
-          title: r.nom,
-          start: `${r.date}T${r.heure}`,
-          url: `client.html?id=${r._id}`
-        }));
+        const select = document.getElementById("creneauASupprimer");
+        select.innerHTML = "";
+        data.forEach((h) => {
+          const opt = document.createElement("option");
+          opt.value = h;
+          opt.textContent = h;
+          select.appendChild(opt);
+        });
+      }
 
-        const calendarInstance = new FullCalendar.Calendar(bloc, {
-          initialView: "dayGridMonth",
-          locale: "fr",
-          events: events,
-          eventClick: function(info) {
-            info.jsEvent.preventDefault();
-            if (info.event.url) window.open(info.event.url, "_blank");
+      async function chargerReservations() {
+        if (!sessionActive || !motDePasseAdmin) {
+          alert("⛔ Vous devez d'abord valider le mot de passe.");
+          return;
+        }
+        const motDePasse = document
+          .getElementById("adminPassword")
+          .value.trim();
+        const date = document.getElementById("filtreDate").value;
+        const coiffure = document.getElementById("filtreCoiffure").value;
+        const tri = document.getElementById("tri").value;
+        const rechercheNom = document
+          .getElementById("rechercheNom")
+          .value.trim()
+          .toLowerCase();
+
+        if (!motDePasse) return alert("⛔ Veuillez entrer le mot de passe.");
+
+        let url = "http://localhost:3000/admin/reservations?";
+        if (date) url += `date=${date}&`;
+        if (coiffure) url += `coiffure=${encodeURIComponent(coiffure)}&`;
+
+        try {
+          const res = await fetch(url, {
+            headers: { "x-admin-password": motDePasse },
+          });
+          const container = document.getElementById("reservations");
+          container.innerHTML = "";
+
+          if (!res.ok)
+            return (container.innerHTML =
+              "<p>⛔ Accès refusé ou erreur serveur.</p>");
+
+          let data = await res.json();
+          if (rechercheNom)
+            data = data.filter((r) =>
+              r.nom.toLowerCase().includes(rechercheNom)
+            );
+
+          if (tri === "date") {
+            data.sort(
+              (a, b) =>
+                a.date.localeCompare(b.date) || a.heure.localeCompare(b.heure)
+            );
+          } else if (tri === "coiffure") {
+            data.sort((a, b) => a.coiffure.localeCompare(b.coiffure));
+          } else {
+            data.sort((a, b) => b._id.localeCompare(a._id));
+          }
+
+          if (data.length === 0)
+            return (container.innerHTML = "<p>Aucune réservation trouvée.</p>");
+
+          data.forEach((r) => {
+            const bloc = document.createElement("div");
+            bloc.className = "reservation";
+            bloc.innerHTML = `
+            <p><strong>Nom :</strong> <a href="client.html?id=${r._id}" target="_blank">${r.nom}</a></p>
+            <p><strong>Date :</strong> ${r.date}</p>
+            <p><strong>Heure :</strong> ${r.heure}</p>
+            <p><strong>Coiffure :</strong> ${r.coiffure}</p>
+            <button onclick="envoyerRappel('${r._id}', '${motDePasse}')">📲 Rappel</button>
+            <button onclick="supprimerReservation('${r._id}', '${motDePasse}')">🗑 Supprimer</button>
+          `;
+            container.appendChild(bloc);
+          });
+        } catch (err) {
+          console.error("❌ Erreur réseau :", err);
+          document.getElementById("reservations").innerHTML =
+            "<p>⛔ Impossible de charger les données.</p>";
+        }
+      }
+
+      async function envoyerRappel(id, motDePasse) {
+        if (!sessionActive || !motDePasseAdmin) {
+          alert("⛔ Vous devez d'abord valider le mot de passe.");
+          return;
+        }
+        try {
+          const res = await fetch(`http://localhost:3000/admin/rappel/${id}`, {
+            method: "POST",
+            headers: { "x-admin-password": motDePasse },
+          });
+          alert(
+            res.ok ? "✅ Rappel envoyé !" : "⛔ Échec de l'envoi du rappel."
+          );
+        } catch (err) {
+          console.error("❌ Erreur réseau :", err);
+          alert("⛔ Impossible de contacter le serveur.");
+        }
+      }
+
+      async function supprimerReservation(id, motDePasse) {
+        if (!id || !motDePasse) {
+          alert("⛔ ID ou mot de passe manquant.");
+          return;
+        }
+
+        if (!confirm("🗑 Supprimer cette réservation ?")) return;
+
+        try {
+          const res = await fetch(
+            `http://localhost:3000/admin/reservations/${id}`,
+            {
+              method: "DELETE",
+              headers: { "x-admin-password": motDePasse },
+            }
+          );
+
+          if (res.ok) {
+            alert("✅ Réservation supprimée !");
+            chargerReservations();
+          } else {
+            alert("⛔ Échec de la suppression.");
+          }
+        } catch (err) {
+          console.error("❌ Erreur réseau :", err);
+          alert("⛔ Impossible de contacter le serveur.");
+        }
+      }
+
+      async function exporterPDF() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        let y = 20;
+
+        doc.setFontSize(16);
+        doc.text("Salon Mireille Beauté – Réservations", 10, 10);
+
+        const blocs = document.querySelectorAll(".reservation");
+        if (blocs.length === 0) {
+          alert("⛔ Aucune réservation à exporter.");
+          return;
+        }
+
+        blocs.forEach((bloc) => {
+          const lignes = bloc.innerText.split("\n");
+          lignes.forEach((ligne) => {
+            doc.setFontSize(12);
+            doc.text(ligne, 10, y);
+            y += 7;
+          });
+          y += 5;
+          if (y > 250) {
+            doc.addPage();
+            y = 20;
           }
         });
 
-        calendarInstance.render();
+        doc.text(
+          "Signature : Mireille, propriétaire du Salon Mireille Beauté",
+          10,
+          y + 10
+        );
+        doc.save("reservations_mireille.pdf");
       }
 
-      const visible = bloc.style.display === "block";
-      bloc.style.display = visible ? "none" : "block";
-      bouton.textContent = visible ? "📅 Voir le calendrier" : "📅 Masquer le calendrier";
-    }
+      async function afficherCalendrier() {
+        if (!sessionActive || !motDePasseAdmin) {
+          alert("⛔ Vous devez d'abord valider le mot de passe.");
+          return;
+        }
+        const motDePasse = document
+          .getElementById("adminPassword")
+          .value.trim();
+        if (!motDePasse) {
+          alert("⛔ Mot de passe requis.");
+          return;
+        }
 
-    window.onload = () => {
-      chargerListeCreneaux();
-      chargerReservations();
-    };
-  </script>
-</body>
+        const res = await fetch("http://localhost:3000/admin/reservations", {
+          headers: { "x-admin-password": motDePasse },
+        });
+
+        const data = await res.json();
+
+        const events = data.map((r) => ({
+          title: r.nom,
+          start: `${r.date}T${r.heure}`,
+          url: `client.html?id=${r._id}`,
+        }));
+
+        const calendrierEl = document.getElementById("calendrier");
+        calendrierEl.innerHTML = "";
+
+        const calendar = new FullCalendar.Calendar(calendrierEl, {
+          initialView: "dayGridMonth",
+          locale: "fr",
+          events: events,
+          eventClick: function (info) {
+            info.jsEvent.preventDefault();
+            if (info.event.url) window.open(info.event.url, "_blank");
+          },
+        });
+
+        calendar.render();
+      }
+
+      window.onload = () => {
+        chargerListeCreneaux();
+        chargerReservations();
+      };
+    </script>
+  </body>
 </html>

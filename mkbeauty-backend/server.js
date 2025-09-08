@@ -42,10 +42,7 @@
 
  // 📦 Connexion MongoDB
  mongoose
-   .connect("mongodb://localhost:27017/salon_mireille", {
-     useNewUrlParser: true,
-     useUnifiedTopology: true,
-   })
+   .connect("mongodb://localhost:27017/salon_mireille")
    .then(() => console.log("✅ Connexion MongoDB réussie"))
    .catch((err) => console.error("❌ Erreur MongoDB :", err));
 
