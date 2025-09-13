@@ -41,10 +41,13 @@
  });
 
  // 📦 Connexion MongoDB
- mongoose
-   .connect("mongodb://localhost:27017/salon_mireille")
-   .then(() => console.log("✅ Connexion MongoDB réussie"))
-   .catch((err) => console.error("❌ Erreur MongoDB :", err));
+
+      mongoose.connect("mongodb://localhost:27017/salon_mireille", {
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+      })
+      .then(() => console.log("✅ Connexion à MongoDB réussie"))
+      .catch((err) => console.error("❌ Erreur MongoDB :", err));
 
  // 📄 Modèle de réservation
  const reservationSchema = new mongoose.Schema({
@@ -200,6 +203,11 @@
  app.get("/admin", (req, res) => {
    res.sendFile(path.join(__dirname, "public", "admin.html"));
  });
+
+  // 🌐 Route racine pour test de déploiement
+app.get("/", (req, res) => {
+  res.send("Bienvenue sur le backend de Mireille 💅");
+});
 
  // 🚀 Lancement du serveur
  app.listen(PORT, () => {
