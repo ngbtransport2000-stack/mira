@@ -42,12 +42,13 @@
 
  // 📦 Connexion MongoDB
 
-      mongoose.connect("mongodb://localhost:27017/salon_mireille", {
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
-      })
-      .then(() => console.log("✅ Connexion à MongoDB réussie"))
-      .catch((err) => console.error("❌ Erreur MongoDB :", err));
+      mongoose
+        .connect(process.env.MONGODB_URI, {
+          useNewUrlParser: true,
+          useUnifiedTopology: true,
+        })
+        .then(() => console.log("✅ Connecté à MongoDB Atlas"))
+        .catch((err) => console.error("❌ Erreur MongoDB :", err));
 
  // 📄 Modèle de réservation
  const reservationSchema = new mongoose.Schema({
