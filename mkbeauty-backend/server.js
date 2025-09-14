@@ -9,8 +9,8 @@
  app.use(express.static(path.join(__dirname, "public")));
 
  const app = express();
- const PORT = 3000;
 
+ 
  // 🔧 Middlewares globaux
  app.use(cors());
  app.use(express.json());
@@ -212,6 +212,10 @@ app.get("/", (req, res) => {
 });
 
  // 🚀 Lancement du serveur
+
+ const PORT = process.env.PORT || 3000;
+
  app.listen(PORT, () => {
    console.log(`✅ Serveur lancé sur http://localhost:${PORT}`);
  });
+ 
