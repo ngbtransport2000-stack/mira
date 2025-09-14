@@ -206,7 +206,7 @@
 
           if (!calendarInstance) {
             const res = await fetch(
-              "http://localhost:3000/admin/reservations",
+              "https://mira-55g4.onrender.com/admin/reservations",
               {
                 headers: { "x-admin-password": motDePasse },
               }
@@ -256,7 +256,7 @@
           .value.trim();
         if (!heure || !motDePasse)
           return alert("⛔ Heure et mot de passe requis.");
-        await fetch("http://localhost:3000/admin/creneaux", {
+        await fetch("https://mira-55g4.onrender.com/admin/creneaux", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -278,7 +278,7 @@
           .value.trim();
         if (!heure || !motDePasse)
           return alert("⛔ Sélectionnez un créneau et entrez le mot de passe.");
-        await fetch(`http://localhost:3000/admin/creneaux/${heure}`, {
+        await fetch(`https://mira-55g4.onrender.com/admin/creneaux/${heure}`, {
           method: "DELETE",
           headers: { "x-admin-password": motDePasse },
         });
@@ -286,7 +286,7 @@
       }
 
       async function chargerListeCreneaux() {
-        const res = await fetch("http://localhost:3000/creneaux");
+        const res = await fetch("https://mira-55g4.onrender.com/creneaux");
         const data = await res.json();
         const select = document.getElementById("creneauASupprimer");
         select.innerHTML = "";
@@ -316,7 +316,7 @@
 
         if (!motDePasse) return alert("⛔ Veuillez entrer le mot de passe.");
 
-        let url = "http://localhost:3000/admin/reservations?";
+        let url = "https://mira-55g4.onrender.com/admin/reservations?";
         if (date) url += `date=${date}&`;
         if (coiffure) url += `coiffure=${encodeURIComponent(coiffure)}&`;
 
@@ -377,7 +377,7 @@
           return;
         }
         try {
-          const res = await fetch(`http://localhost:3000/admin/rappel/${id}`, {
+          const res = await fetch(`https://mira-55g4.onrender.com/admin/rappel/${id}`, {
             method: "POST",
             headers: { "x-admin-password": motDePasse },
           });
@@ -400,7 +400,7 @@
 
         try {
           const res = await fetch(
-            `http://localhost:3000/admin/reservations/${id}`,
+            `https://mira-55g4.onrender.com/admin/reservations/${id}`,
             {
               method: "DELETE",
               headers: { "x-admin-password": motDePasse },
@@ -468,7 +468,7 @@
           return;
         }
 
-        const res = await fetch("http://localhost:3000/admin/reservations", {
+        const res = await fetch("https://mira-55g4.onrender.com/admin/reservations", {
           headers: { "x-admin-password": motDePasse },
         });
 

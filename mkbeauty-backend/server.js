@@ -3,6 +3,10 @@
  const mongoose = require("mongoose");
  const cors = require("cors");
  const twilio = require("twilio");
+ const path = require("path");
+
+ // 🔧 Servir les fichiers statiques du dossier "public"
+ app.use(express.static(path.join(__dirname, "public")));
 
  const app = express();
  const PORT = 3000;
